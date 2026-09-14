@@ -106,31 +106,42 @@ class BoardView:
             current == u
             and weight <= self.engine.state.budget_remaining
         )
-        color = "#A9DFBF" if affordable else "#666666"
+        edge_color  = "#A9DFBF" if affordable else "#666666"
+        label_color = "#FFFFFF" if affordable else "#BBBBBB"
 
-        # annotate gives clean shrinkA/B support — arrows start/end at node edges.
+        # Straight arrow — no arc so the label is unambiguously on the line.
         self.ax.annotate(
             "", xy=(x2, y2), xytext=(x1, y1),
             arrowprops=dict(
                 arrowstyle="-|>",
-                color=color,
+                color=edge_color,
                 lw=1.3,
                 mutation_scale=13,
-                connectionstyle="arc3,rad=0.18",
                 shrinkA=_SHRINK_PTS,
                 shrinkB=_SHRINK_PTS,
             ),
             zorder=1,
         )
 
-        # Weight label offset perpendicular to the midpoint
-        mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+        # Place label close to the source node (not at midpoint) so that
+        # long crossing edges don't dump their label in the middle of the canvas.
         dx, dy = x2 - x1, y2 - y1
-        norm = math.hypot(dx, dy) or 1
-        ox, oy = -dy / norm * 0.14, dx / norm * 0.14
-        self.ax.text(mx + ox, my + oy, str(weight),
-                     fontsize=7, ha="center", va="center",
-                     color="#CCCCCC", zorder=2)
+        edge_len = math.hypot(dx, dy) or 1
+        # t: far enough past the source circle to be readable, min 22%
+        t = max(_NODE_R * 2.1 / edge_len, 0.22)
+        lx = x1 + t * dx
+        ly = y1 + t * dy
+        # Outward perpendicular: pick the normal that points away from origin
+        perp = (-dy / edge_len, dx / edge_len)
+        if perp[0] * lx + perp[1] * ly < 0:
+            perp = (-perp[0], -perp[1])
+        ox, oy = perp[0] * 0.09, perp[1] * 0.09
+        # Dark bbox so the label reads cleanly on top of the arrow line
+        self.ax.text(lx + ox, ly + oy, str(weight),
+                     fontsize=8, ha="center", va="center",
+                     color=label_color, zorder=4,
+                     bbox=dict(boxstyle="round,pad=0.12", fc="#2A2A2A",
+                               ec=edge_color, lw=0.6, alpha=0.92))
 
     # ------------------------------------------------------------------
     # Click handling
