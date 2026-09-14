@@ -1,7 +1,9 @@
 """Main tkinter application window."""
 from __future__ import annotations
+import signal
 import tkinter as tk
 from tkinter import messagebox
+import matplotlib.pyplot as plt
 
 from game.engine import GameEngine, MoveResult
 from game.board import Board
@@ -19,6 +21,10 @@ class App:
         self.root = tk.Tk()
         self.root.title("Graph Game")
         self.root.configure(bg="#1C1C1C")
+        self.root.protocol("WM_DELETE_WINDOW", self._on_close)
+        # Restore default SIGINT so Ctrl+C exits immediately instead of
+        # sitting in tkinter's event queue.
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
 
         self._build_hud()
         self._canvas_frame = tk.Frame(self.root, bg="#1C1C1C")
@@ -154,6 +160,10 @@ class App:
 
     def _show_message(self, text: str):
         self._msg_var.set(text)
+
+    def _on_close(self):
+        plt.close("all")
+        self.root.destroy()
 
     # ------------------------------------------------------------------
     # Run
