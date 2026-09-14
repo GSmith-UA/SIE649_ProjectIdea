@@ -101,7 +101,7 @@ class App:
                 if eng.is_stuck():
                     self._show_message("No affordable moves — end your turn.")
                 else:
-                    self._show_message(f"Placed on node {node}. Click a green neighbour to move.")
+                    self._show_message("Placed. Click a green neighbour to move.")
             return
 
         # Subsequent: try to move
@@ -113,7 +113,7 @@ class App:
             if eng.is_stuck():
                 self._show_message("No more affordable moves — end your turn.")
             else:
-                self._show_message(f"Moved to node {node}. Budget left: {eng.state.budget_remaining}.")
+                self._show_message(f"Moved. Budget left: {eng.state.budget_remaining}.")
         elif result == MoveResult.INVALID_EDGE:
             self._show_message("No directed edge to that node.")
         elif result == MoveResult.OVER_BUDGET:

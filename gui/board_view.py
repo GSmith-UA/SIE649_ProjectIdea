@@ -89,10 +89,6 @@ class BoardView:
     def _draw_node(self, node: int, color: str):
         x, y = self._pos[node]
         self.ax.add_patch(mpatches.Circle((x, y), _NODE_R, color=color, zorder=3))
-        # Node index label above the circle
-        self.ax.text(x, y + _NODE_R + 0.05, str(node),
-                     ha="center", va="bottom", fontsize=8, color="white", zorder=5)
-        # Current point value inside the circle
         pts = self.engine.board.node_value(node)
         self.ax.text(x, y, str(pts),
                      ha="center", va="center", fontsize=11, fontweight="bold",
