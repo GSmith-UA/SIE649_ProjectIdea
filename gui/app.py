@@ -13,21 +13,19 @@ from gui.board_view import BoardView
 
 class App:
     def __init__(self, config_path: str = "setup.json"):
-        cfg = load_config(config_path)
-        graph = Graph(cfg["graph"]["adjacency_matrix"])
-        board = Board(graph, cfg["node_distribution"], cfg["edge_distribution"])
-        state = GameState(total_turns=cfg["turns"], budget=cfg["budget"])
-        self.engine = GameEngine(graph, board, state)
+        self._config_path = config_path
+        self._cfg = load_config(config_path)
 
         self.root = tk.Tk()
         self.root.title("Graph Game")
         self.root.configure(bg="#1C1C1C")
 
         self._build_hud()
-        self.view = BoardView(self.root, self.engine, on_move_callback=self._handle_click)
+        self._canvas_frame = tk.Frame(self.root, bg="#1C1C1C")
+        self._canvas_frame.pack(fill="both", expand=True)
         self._build_controls()
-        self._update_hud()
-        self._show_message("Turn 1 — click any node to place yourself.")
+
+        self._start_new_game()
 
     # ------------------------------------------------------------------
     # Layout
@@ -56,11 +54,34 @@ class App:
 
         self._msg_var = tk.StringVar()
         tk.Label(ctrl, textvariable=self._msg_var, bg="#1C1C1C", fg="#DDDDDD",
-                 font=("Helvetica", 10), wraplength=400).pack(side="left", expand=True)
+                 font=("Helvetica", 10), wraplength=380).pack(side="left", expand=True)
 
+        tk.Button(ctrl, text="New Game", command=self._start_new_game,
+                  bg="#2E4057", fg="white", font=("Helvetica", 10, "bold"),
+                  relief="flat", padx=12, pady=4).pack(side="right", padx=(4, 0))
         tk.Button(ctrl, text="End Turn", command=self._end_turn,
                   bg="#444444", fg="white", font=("Helvetica", 10, "bold"),
                   relief="flat", padx=12, pady=4).pack(side="right")
+
+    # ------------------------------------------------------------------
+    # Game lifecycle
+    # ------------------------------------------------------------------
+
+    def _start_new_game(self):
+        cfg = self._cfg
+        graph = Graph(cfg["graph"]["adjacency_matrix"])
+        board = Board(graph, cfg["node_distribution"], cfg["edge_distribution"])
+        state = GameState(total_turns=cfg["turns"], budget=cfg["budget"])
+        self.engine = GameEngine(graph, board, state)
+
+        # Destroy and recreate the board canvas so the engine reference is fresh.
+        for widget in self._canvas_frame.winfo_children():
+            widget.destroy()
+        self.view = BoardView(self._canvas_frame, self.engine,
+                              on_move_callback=self._handle_click)
+
+        self._update_hud()
+        self._show_message("Turn 1 — click any green node to place yourself.")
 
     # ------------------------------------------------------------------
     # Event handlers
